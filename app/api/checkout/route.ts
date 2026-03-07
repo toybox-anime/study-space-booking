@@ -9,6 +9,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { date, startTime, hours, totalPrice } = body;
 
+    // 💡 ① リクエスト元（今開いているサイト）のURLを自動で取得する！
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+
     // 💡 ② Stripeに決済画面の作成をお願いする
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -26,9 +29,10 @@ export async function POST(req: Request) {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:3000/success?date=${date}&time=${startTime}&hours=${hours}`,
-      cancel_url: "http://localhost:3000/",
 
+      // 💡 ② localhostの代わりに、取得した origin を使う！
+      success_url: `${origin}/success?date=${date}&time=${startTime}&hours=${hours}`,
+      cancel_url: `${origin}/`,
       // 💡 【超重要】 ここで「予約データ」を、Stripeの決済履歴のオマケ情報（metadata）として埋め込んでおく！
       // こうすることで、決済完了のWebhookが来たときに「あ、この日時の予約だ！」と分かります。
       metadata: {
