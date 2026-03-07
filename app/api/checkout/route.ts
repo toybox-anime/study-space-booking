@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         },
       ],
       mode: "payment",
-      success_url: "http://localhost:3000/success",
+      success_url: `http://localhost:3000/success?date=${date}&time=${startTime}&hours=${hours}`,
       cancel_url: "http://localhost:3000/",
 
       // 💡 【超重要】 ここで「予約データ」を、Stripeの決済履歴のオマケ情報（metadata）として埋め込んでおく！
