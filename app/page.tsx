@@ -14,6 +14,23 @@ export default function Home() {
   const unitPrice = 500;
   const totalPrice = hours * unitPrice;
 
+  // 💡 追加：今日の日付を「YYYY-MM-DD」の形式で取得する（例: "2024-03-05"）
+  const today = new Date().toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).split('/').join('-');
+
+  // 💡 追加：営業時間を設定（例：朝9時から夜22時まで）
+  const OPEN_HOUR = 9;  // 9時オープン
+  const CLOSE_HOUR = 22; // 22時クローズ
+  
+  // 営業時間の選択肢のリストを自動で作る
+  const availableTimes = [];
+  for (let h = OPEN_HOUR; h <= CLOSE_HOUR; h++) {
+    availableTimes.push(`${h}:00`);
+  }
+
   // 💡 【大追加！】日付（date）が選ばれたら自動的にAPIを叩いて予約状況をチェックする！
   useEffect(() => {
     if (!date) return;
@@ -88,6 +105,7 @@ export default function Home() {
             className="w-full border border-slate-300 rounded-lg p-3 text-slate-700"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            min={today} // 💡 今日以降の日付しか選べないようにする
           />
         </div>
 
@@ -99,13 +117,10 @@ export default function Home() {
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
             >
-              {[...Array(11)].map((_, i) => {
-                const timeStr = `${10 + i}:00`;
-                // 💡 この時間が予約済みかどうかを判定
+              {/* 💡 先ほど作った availableTimes を使って選択肢を表示する */}
+              {availableTimes.map((timeStr) => {
                 const isBooked = bookedHours.includes(timeStr);
-                
                 return (
-                  // 予約済みなら disabled をつけて選べなくする！
                   <option key={timeStr} value={timeStr} disabled={isBooked}>
                     {timeStr} {isBooked ? "(予約済)" : ""}
                   </option>
