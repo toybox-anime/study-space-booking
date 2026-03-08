@@ -19,7 +19,6 @@ export default function AdminPage() {
     fetchBookings();
   }, []);
 
-  // 予約データを取得する関数（再利用できるように外に出しました）
   const fetchBookings = async () => {
     try {
       const res = await fetch("/api/admin/bookings");
@@ -34,22 +33,18 @@ export default function AdminPage() {
     }
   };
 
-  // 💡 追加：キャンセルボタンを押したときの処理
   const handleDelete = async (id: string, date: string, time: string) => {
-    // 間違えて押さないように確認メッセージを出す
     const isConfirmed = window.confirm(`${date} ${time} からの予約をキャンセル（削除）しますか？\n※この操作は元に戻せません。`);
     
     if (!isConfirmed) return;
 
     try {
-      // 先ほど作った削除APIを呼び出す
       const res = await fetch(`/api/admin/bookings/${id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
         alert("予約をキャンセルしました。");
-        // 削除が終わったら、もう一度最新のリストを読み込み直す
         fetchBookings();
       } else {
         alert("削除に失敗しました。");
@@ -59,10 +54,40 @@ export default function AdminPage() {
     }
   };
 
+  // 💡 ① 今月の売上と件数を自動計算するロジック
+  const currentMonth = new Date().toISOString().slice(0, 7); // 例: "2024-03"
+  
+  // 今月の予約だけに絞り込む
+  const thisMonthBookings = bookings.filter((b) => b.booking_date.startsWith(currentMonth));
+  
+  // 今月の予約件数
+  const thisMonthCount = thisMonthBookings.length;
+  
+  // 今月の売上合計（今回は1時間あたり500円として計算）
+  const thisMonthSales = thisMonthBookings.reduce((total, b) => total + (b.hours * 500), 0);
+
   return (
     <div className="min-h-screen bg-slate-100 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-800 mb-8">🛠️ 店長ダッシュボード (予約一覧)</h1>
+        <h1 className="text-3xl font-bold text-slate-800 mb-8">🛠️ 店長ダッシュボード</h1>
+
+        {/* 💡 ② 経営状況がひと目でわかる売上パネル */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <p className="text-sm font-bold text-slate-500 mb-1">今月の予約件数</p>
+            <div className="text-3xl font-black text-slate-800">
+              {thisMonthCount} <span className="text-lg font-bold text-slate-500">件</span>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <p className="text-sm font-bold text-slate-500 mb-1">今月の売上 (見込み)</p>
+            <div className="text-3xl font-black text-blue-600">
+              ¥{thisMonthSales.toLocaleString()}
+            </div>
+          </div>
+        </div>
+
+        <h2 className="text-xl font-bold text-slate-700 mb-4">予約一覧</h2>
 
         {isLoading ? (
           <p className="text-slate-500">データを読み込み中...</p>
@@ -76,7 +101,7 @@ export default function AdminPage() {
                   <th className="p-4 font-bold text-slate-600">予約日</th>
                   <th className="p-4 font-bold text-slate-600">時間</th>
                   <th className="p-4 font-bold text-slate-600">暗証番号</th>
-                  <th className="p-4 font-bold text-slate-600 text-center">操作</th> {/* 💡 追加 */}
+                  <th className="p-4 font-bold text-slate-600 text-center">操作</th>
                 </tr>
               </thead>
               <tbody>
